@@ -218,7 +218,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 w-full max-w-full overflow-x-hidden relative">
       <Navbar
         profile={data.profile}
         overallProgress={overallProgress}
@@ -232,7 +232,7 @@ export default function HomePage() {
         setActiveTab={setActiveTab}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-8 pb-28 md:pb-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-8 pb-10 sm:pb-14">
         {activeTab === 'overview' && (
           <DashboardOverview
             profile={data.profile}
