@@ -16,6 +16,8 @@ import {
   Tag
 } from 'lucide-react';
 import { formatDateIndo, formatBytes } from '@/lib/utils';
+import { isSupabaseConnected } from '@/lib/supabase';
+import { uploadFileToSupabaseStorage } from '@/lib/supabase-service';
 
 interface DocumentsSectionProps {
   documents: DocumentDraft[];
@@ -62,26 +64,42 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
     setUploadError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
+      let fileUrl = '#';
 
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      // 1. If Supabase is connected in browser, upload directly to Supabase Storage Bucket
+      if (isSupabaseConnected()) {
+        const uploadResult = await uploadFileToSupabaseStorage(selectedFile);
+        if (uploadResult.success && uploadResult.fileUrl) {
+          fileUrl = uploadResult.fileUrl;
+        } else {
+          console.warn('Direct Supabase upload failed, trying API route:', uploadResult.error);
+        }
+      }
 
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || 'Gagal mengunggah file.');
+      // 2. Fallback to /api/upload if not yet uploaded
+      if (fileUrl === '#') {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json.error || 'Gagal mengunggah file.');
+        }
+        fileUrl = json.fileUrl || '#';
       }
 
       const newDoc: DocumentDraft = {
         id: `doc-${Date.now()}`,
         version: version || `v${documents.length + 1}.0`,
         title: title || selectedFile.name,
-        fileName: json.fileName || selectedFile.name,
-        fileSize: json.fileSize || selectedFile.size,
-        fileUrl: json.fileUrl || '#',
+        fileName: selectedFile.name,
+        fileSize: selectedFile.size,
+        fileUrl,
         uploadDate: new Date().toISOString().slice(0, 10),
         notes: notes.trim(),
         stage,
