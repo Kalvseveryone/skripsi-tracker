@@ -1,5 +1,9 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+// Kredensial Proyek Supabase default (Public/Anon Publishable Key)
+export const DEFAULT_SUPABASE_URL = 'https://yxohqewnlufniwvrzmsn.supabase.co';
+export const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_6_jGHNrUl7o8RFtsQwVbfA_K1Oytshl';
+
 const SUPABASE_CONFIG_STORAGE_KEY = 'skripsi_supabase_client_config';
 
 export interface SupabaseConfig {
@@ -10,18 +14,12 @@ export interface SupabaseConfig {
 export function getStoredSupabaseConfig(): SupabaseConfig {
   if (typeof window === 'undefined') {
     return {
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL,
+      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY,
     };
   }
 
-  const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const envKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-  if (envUrl && envKey) {
-    return { url: envUrl, anonKey: envKey };
-  }
-
+  // Check custom override in localStorage
   try {
     const raw = localStorage.getItem(SUPABASE_CONFIG_STORAGE_KEY);
     if (raw) {
@@ -34,7 +32,14 @@ export function getStoredSupabaseConfig(): SupabaseConfig {
     console.error('Failed to read Supabase config from localStorage:', err);
   }
 
-  return { url: '', anonKey: '' };
+  // Check environment variables or use project defaults
+  const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const envKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  return {
+    url: envUrl || DEFAULT_SUPABASE_URL,
+    anonKey: envKey || DEFAULT_SUPABASE_ANON_KEY,
+  };
 }
 
 export function saveStoredSupabaseConfig(config: SupabaseConfig): void {
@@ -72,4 +77,3 @@ export function isSupabaseConnected(): boolean {
   const config = getStoredSupabaseConfig();
   return Boolean(config.url && config.anonKey && config.url.startsWith('https://'));
 }
-

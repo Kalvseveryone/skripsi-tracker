@@ -8,10 +8,12 @@ import {
   Upload, 
   RotateCcw, 
   Sparkles,
-  HelpCircle,
-  Play
+  Play,
+  Cloud,
+  CheckCircle2
 } from 'lucide-react';
 import { StudentProfile } from '@/types';
+import { isSupabaseConnected } from '@/lib/supabase';
 
 interface NavbarProps {
   profile: StudentProfile;
@@ -21,6 +23,7 @@ interface NavbarProps {
   onImportData: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onResetData: () => void;
   onLoadDemoData: () => void;
+  onOpenSupabaseModal?: () => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
 }
@@ -33,10 +36,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   onImportData,
   onResetData,
   onLoadDemoData,
+  onOpenSupabaseModal,
   activeTab,
   setActiveTab
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const isCloudActive = typeof window !== 'undefined' ? isSupabaseConnected() : true;
 
   const navItems = [
     { id: 'overview', label: 'Ringkasan' },
@@ -69,22 +74,63 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Quick Progress Bar */}
-          <div className="hidden md:flex items-center space-x-3 px-4 py-1.5 bg-slate-50 border border-slate-200 rounded-full">
-            <span className="text-xs font-medium text-slate-600 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Progres Skripsi:
-            </span>
-            <div className="w-28 bg-slate-200 h-2.5 rounded-full overflow-hidden">
-              <div 
-                className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                style={{ width: `${overallProgress}%` }}
-              />
+          {/* Quick Progress Bar & Cloud Status */}
+          <div className="hidden md:flex items-center space-x-3">
+            {/* Cloud Sync Button */}
+            {onOpenSupabaseModal && (
+              <button
+                onClick={onOpenSupabaseModal}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition ${
+                  isCloudActive
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                    : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
+                }`}
+                title="Status Sinkronisasi Supabase Multi-Platform"
+              >
+                {isCloudActive ? (
+                  <>
+                    <Cloud className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Cloud Aktif</span>
+                  </>
+                ) : (
+                  <>
+                    <Cloud className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Hubungkan Cloud</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Progress */}
+            <div className="flex items-center space-x-3 px-4 py-1.5 bg-slate-50 border border-slate-200 rounded-full">
+              <span className="text-xs font-medium text-slate-600 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Progres:
+              </span>
+              <div className="w-24 bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${overallProgress}%` }}
+                />
+              </div>
+              <span className="text-xs font-bold text-emerald-700">{overallProgress}%</span>
             </div>
-            <span className="text-xs font-bold text-emerald-700">{overallProgress}%</span>
           </div>
 
           {/* User Profile & Actions */}
           <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Mobile Cloud Status */}
+            {onOpenSupabaseModal && (
+              <button
+                onClick={onOpenSupabaseModal}
+                className={`md:hidden p-2 rounded-lg border transition ${
+                  isCloudActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                }`}
+                title="Cloud Sync"
+              >
+                <Cloud className="w-4 h-4" />
+              </button>
+            )}
+
             <button
               onClick={onEditProfile}
               className={`flex items-center space-x-2 px-3 py-1.5 text-xs font-medium rounded-lg transition border ${
@@ -95,7 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Edit Profil & Dosen Pembimbing"
             >
               <UserCheck className="w-4 h-4 text-emerald-600" />
-              <span>{profile.nama ? profile.nama.split(' ')[0] : 'Isi Profil Anda'}</span>
+              <span>{profile.nama ? profile.nama.split(' ')[0] : 'Isi Profil'}</span>
               {profile.nim && <span className="text-slate-400 hidden lg:inline">({profile.nim})</span>}
             </button>
 

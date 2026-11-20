@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AppData, StudentProfile, Milestone, BimbinganLog, TaskItem, DocumentDraft } from '@/types';
 import { loadAppData, saveAppData, resetAppData, loadDemoData, exportDataAsJson } from '@/lib/storage';
+import { fetchCloudData, saveCloudData } from '@/lib/supabase-service';
+import { isSupabaseConnected } from '@/lib/supabase';
 import { Navbar } from '@/components/Navbar';
 import { DashboardOverview } from '@/components/DashboardOverview';
 import { MilestonesSection } from '@/components/MilestonesSection';
@@ -11,25 +13,64 @@ import { TaskManagerSection } from '@/components/TaskManagerSection';
 import { DocumentsSection } from '@/components/DocumentsSection';
 import { PrintableLogbook } from '@/components/PrintableLogbook';
 import { StudentProfileModal } from '@/components/StudentProfileModal';
+import { SupabaseSyncModal } from '@/components/SupabaseSyncModal';
 
 export default function HomePage() {
   const [data, setData] = useState<AppData | null>(null);
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatusText, setSyncStatusText] = useState<'synced' | 'saving' | 'offline'>('synced');
   const [openBimbinganModalInitially, setOpenBimbinganModalInitially] = useState(false);
 
-  // Load state from localStorage on client mount
-  useEffect(() => {
-    const loaded = loadAppData();
-    setData(loaded);
+  // Load state on mount (Priority: Supabase Cloud -> fallback localStorage)
+  const refreshFromCloud = useCallback(async () => {
+    try {
+      const cloudData = await fetchCloudData();
+      if (cloudData && cloudData.profile) {
+        setData(cloudData);
+        saveAppData(cloudData);
+        setSyncStatusText('synced');
+        return true;
+      }
+    } catch (err) {
+      console.warn('Could not fetch latest cloud data:', err);
+    }
+    return false;
   }, []);
+
+  useEffect(() => {
+    async function init() {
+      // 1. Try to fetch from Supabase Cloud first
+      const gotCloud = await refreshFromCloud();
+      if (!gotCloud) {
+        // 2. Fallback to localStorage
+        const local = loadAppData();
+        setData(local);
+        // If local has data, upload to cloud so cloud gets initialized
+        if (local && local.profile && local.profile.nama) {
+          saveCloudData(local);
+        }
+      }
+    }
+
+    init();
+
+    // Auto-refresh when tab/window gains focus so changes from other devices appear immediately
+    const handleFocus = () => {
+      refreshFromCloud();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [refreshFromCloud]);
 
   if (!data) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-600">Memuat SkripsiTracker...</p>
+          <p className="text-sm font-semibold text-slate-600">Menghubungkan ke Supabase Cloud...</p>
         </div>
       </div>
     );
@@ -40,10 +81,45 @@ export default function HomePage() {
   const totalProgressSum = data.milestones.reduce((acc, m) => acc + m.progressPercentage, 0);
   const overallProgress = totalMilestones > 0 ? Math.round(totalProgressSum / totalMilestones) : 0;
 
-  // Handlers
+  // Master update handler: saves locally AND sends to Supabase Cloud
   const handleUpdateData = (updated: AppData) => {
     setData(updated);
     saveAppData(updated);
+
+    // Sync to Supabase Cloud
+    setSyncStatusText('saving');
+    saveCloudData(updated)
+      .then((ok) => {
+        if (ok) {
+          setSyncStatusText('synced');
+        } else {
+          setSyncStatusText('offline');
+        }
+      })
+      .catch((err) => {
+        console.error('Supabase sync error:', err);
+        setSyncStatusText('offline');
+      });
+  };
+
+  const handleManualSyncNow = async () => {
+    setIsSyncing(true);
+    setSyncStatusText('saving');
+    try {
+      const cloudData = await fetchCloudData();
+      if (cloudData && cloudData.profile && cloudData.profile.nama) {
+        setData(cloudData);
+        saveAppData(cloudData);
+      } else if (data) {
+        await saveCloudData(data);
+      }
+      setSyncStatusText('synced');
+    } catch (err) {
+      console.error('Manual sync failed:', err);
+      setSyncStatusText('offline');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleUpdateProfile = (updatedProfile: StudentProfile) => {
@@ -103,6 +179,7 @@ export default function HomePage() {
     if (confirm('Kosongkan semua data dan mulai baru dari awal?')) {
       const reset = resetAppData();
       setData(reset);
+      saveCloudData(reset);
     }
   };
 
@@ -110,6 +187,7 @@ export default function HomePage() {
     if (confirm('Muat data contoh (demo) untuk melihat simulasi lengkap aplikasi? Data saat ini akan digantikan dengan data contoh.')) {
       const demo = loadDemoData();
       setData(demo);
+      saveCloudData(demo);
     }
   };
 
@@ -127,7 +205,7 @@ export default function HomePage() {
         const parsed = JSON.parse(event.target?.result as string);
         if (parsed.profile && parsed.milestones && parsed.bimbinganLogs) {
           handleUpdateData(parsed);
-          alert('Data berhasil diimpor!');
+          alert('Data berhasil diimpor dan disinkronkan ke Cloud!');
         } else {
           alert('Format file JSON tidak sesuai struktur SkripsiTracker.');
         }
@@ -149,6 +227,7 @@ export default function HomePage() {
         onImportData={handleImportData}
         onResetData={handleResetData}
         onLoadDemoData={handleLoadDemo}
+        onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
@@ -223,9 +302,12 @@ export default function HomePage() {
       <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 print:hidden mt-12">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p>© 2026 SkripsiTracker • Sahabat Mahasiswa Menuju Kelulusan</p>
-          <p className="text-emerald-700 font-medium">
-            &ldquo;Skripsi yang baik adalah skripsi yang selesai.&rdquo;
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-slate-600 font-medium">
+              {syncStatusText === 'saving' ? 'Menyimpan ke Cloud Supabase...' : 'Tersinkronisasi ke Cloud Supabase'}
+            </span>
+          </div>
         </div>
       </footer>
 
@@ -235,6 +317,14 @@ export default function HomePage() {
         onClose={() => setIsProfileModalOpen(false)}
         profile={data.profile}
         onSave={handleUpdateProfile}
+      />
+
+      {/* Supabase Sync Modal */}
+      <SupabaseSyncModal
+        isOpen={isSupabaseModalOpen}
+        onClose={() => setIsSupabaseModalOpen(false)}
+        onSyncNow={handleManualSyncNow}
+        isSyncing={isSyncing}
       />
     </div>
   );
