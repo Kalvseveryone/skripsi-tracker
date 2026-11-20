@@ -8,11 +8,8 @@ import {
   Plus, 
   Trash2, 
   Calendar, 
-  AlertCircle, 
   ListTodo,
-  CheckSquare,
-  Clock,
-  Filter
+  CheckSquare
 } from 'lucide-react';
 import { formatDateIndo } from '@/lib/utils';
 import { triggerConfetti } from './ConfettiReward';
@@ -78,32 +75,32 @@ export const TaskManagerSection: React.FC<TaskManagerSectionProps> = ({
   const activeCount = tasks.filter((t) => !t.completed).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header and Counters */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <ListTodo className="w-6 h-6 text-indigo-600" />
-            Tugas & Target Revisi Harian
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+            <ListTodo className="w-5 h-5 text-indigo-600" />
+            Tugas & Target Harian
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Pecah skripsimu ke dalam langkah-langkah mikro yang terukur agar tidak overwhelm.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Pecah skripsimu ke langkah mikro yang terukur.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full font-semibold">
+        <div className="flex items-center justify-between sm:justify-end gap-2.5">
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold text-[11px]">
               {activeCount} Aktif
             </span>
-            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full font-semibold">
+            <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold text-[11px]">
               {completedCount} Selesai
             </span>
           </div>
 
           <button
             onClick={() => setIsAdding(!isAdding)}
-            className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition flex items-center gap-1.5"
+            className="px-3.5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 rounded-xl shadow-xs transition flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
             Tambah Tugas
@@ -115,10 +112,10 @@ export const TaskManagerSection: React.FC<TaskManagerSectionProps> = ({
       {isAdding && (
         <form
           onSubmit={handleCreateTask}
-          className="bg-white p-5 rounded-2xl border border-indigo-200 shadow-md space-y-4 animate-in fade-in duration-150"
+          className="bg-white p-4 sm:p-5 rounded-2xl border border-indigo-200 shadow-md space-y-3 animate-in fade-in duration-150"
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-indigo-900">Buat Tugas Baru</h3>
+            <h3 className="text-xs sm:text-sm font-bold text-indigo-900">Buat Tugas Baru</h3>
             <button
               type="button"
               onClick={() => setIsAdding(false)}
@@ -133,22 +130,22 @@ export const TaskManagerSection: React.FC<TaskManagerSectionProps> = ({
             <input
               type="text"
               required
-              placeholder="Misal: Cari 5 jurnal pembanding untuk Bab 2..."
+              placeholder="Misal: Perbaiki rumusan masalah Bab 1..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full text-sm px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full text-xs sm:text-sm px-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Terkait Bab / Tahap</label>
+              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Terkait Bab</label>
               <select
                 value={bab}
                 onChange={(e) => setBab(e.target.value)}
                 className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl"
               >
-                <option value="Pra-Sempro">Pra-Sempro / Proposal</option>
+                <option value="Pra-Sempro">Pra-Sempro</option>
                 <option value="Bab 1">Bab 1: Pendahuluan</option>
                 <option value="Bab 2">Bab 2: Tinjauan Pustaka</option>
                 <option value="Bab 3">Bab 3: Metodologi</option>
@@ -156,12 +153,12 @@ export const TaskManagerSection: React.FC<TaskManagerSectionProps> = ({
                 <option value="Bab 4">Bab 4: Hasil & Pembahasan</option>
                 <option value="Bab 5">Bab 5: Kesimpulan</option>
                 <option value="Sidang">Sidang Akhir</option>
-                <option value="Administrasi">Administrasi / Yudisium</option>
+                <option value="Administrasi">Administrasi & Yudisium</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Prioritas</label>
+              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Prioritas</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as PriorityLevel)}
@@ -174,28 +171,27 @@ export const TaskManagerSection: React.FC<TaskManagerSectionProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Tenggat Waktu (Deadline)</label>
+              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Deadline</label>
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl"
-              >
-              </input>
+              />
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-2 pt-1.5">
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg"
+              className="px-3.5 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+              className="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-xs"
             >
               Simpan Tugas
             </button>
@@ -204,25 +200,25 @@ export const TaskManagerSection: React.FC<TaskManagerSectionProps> = ({
       )}
 
       {/* Filter Tabs */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+      <div className="flex items-center justify-between gap-2.5 flex-wrap">
+        <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setFilterStatus('all')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition ${filterStatus === 'all' ? 'bg-white shadow-sm font-bold text-slate-900' : 'text-slate-600'}`}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${filterStatus === 'all' ? 'bg-white shadow-xs text-slate-900' : 'text-slate-600'}`}
           >
             Semua ({tasks.length})
           </button>
           <button
             onClick={() => setFilterStatus('active')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition ${filterStatus === 'active' ? 'bg-white shadow-sm font-bold text-indigo-700' : 'text-slate-600'}`}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${filterStatus === 'active' ? 'bg-white shadow-xs text-indigo-700' : 'text-slate-600'}`}
           >
-            Belum Selesai ({activeCount})
+            Aktif ({activeCount})
           </button>
           <button
             onClick={() => setFilterStatus('completed')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition ${filterStatus === 'completed' ? 'bg-white shadow-sm font-bold text-emerald-700' : 'text-slate-600'}`}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${filterStatus === 'completed' ? 'bg-white shadow-xs text-emerald-700' : 'text-slate-600'}`}
           >
-            Telah Selesai ({completedCount})
+            Selesai ({completedCount})
           </button>
         </div>
 
@@ -232,14 +228,14 @@ export const TaskManagerSection: React.FC<TaskManagerSectionProps> = ({
           className="text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white font-medium"
         >
           <option value="all">Semua Prioritas</option>
-          <option value="tinggi">Prioritas Tinggi</option>
-          <option value="sedang">Prioritas Sedang</option>
-          <option value="rendah">Prioritas Rendah</option>
+          <option value="tinggi">Tinggi</option>
+          <option value="sedang">Sedang</option>
+          <option value="rendah">Rendah</option>
         </select>
       </div>
 
-      {/* Task Items List */}
-      <div className="space-y-2.5">
+      {/* Task Items List (Touch targets) */}
+      <div className="space-y-2">
         {filteredTasks.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
             <CheckSquare className="w-10 h-10 text-slate-300 mx-auto mb-2" />
@@ -249,16 +245,16 @@ export const TaskManagerSection: React.FC<TaskManagerSectionProps> = ({
           filteredTasks.map((task) => (
             <div
               key={task.id}
-              className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+              className={`flex items-center justify-between p-3 sm:p-4 rounded-2xl border transition-all gap-2 ${
                 task.completed
                   ? 'bg-slate-50/70 border-slate-200 opacity-60'
-                  : 'bg-white border-slate-200 shadow-sm hover:border-slate-300'
+                  : 'bg-white border-slate-200 shadow-xs hover:border-slate-300'
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <button
                   onClick={() => handleToggle(task)}
-                  className="p-1 text-slate-400 hover:text-emerald-600 transition"
+                  className="p-1 text-slate-400 hover:text-emerald-600 transition shrink-0"
                 >
                   {task.completed ? (
                     <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -267,33 +263,33 @@ export const TaskManagerSection: React.FC<TaskManagerSectionProps> = ({
                   )}
                 </button>
 
-                <div>
+                <div className="min-w-0">
                   <p
-                    className={`text-sm font-semibold ${
+                    className={`text-xs sm:text-sm font-semibold truncate ${
                       task.completed ? 'line-through text-slate-400' : 'text-slate-800'
                     }`}
                   >
                     {task.title}
                   </p>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 flex-wrap">
+                  <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 flex-wrap">
                     {task.bab && (
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 font-medium rounded">
+                      <span className="px-1.5 py-0.2 bg-slate-100 text-slate-700 font-medium rounded">
                         {task.bab}
                       </span>
                     )}
                     {task.dueDate && (
                       <span className="flex items-center gap-1 text-slate-500">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        Deadline: {formatDateIndo(task.dueDate)}
+                        <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                        {formatDateIndo(task.dueDate)}
                       </span>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span
-                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                  className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                     task.priority === 'tinggi'
                       ? 'bg-rose-100 text-rose-800'
                       : task.priority === 'sedang'
@@ -319,4 +315,3 @@ export const TaskManagerSection: React.FC<TaskManagerSectionProps> = ({
     </div>
   );
 };
-
